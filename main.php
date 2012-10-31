@@ -24,20 +24,30 @@ class VirtualFile implements iNode {
     }
 }
 
-class VirtualDirectory extends VirtualFile {
+class VirtualDirectory implements iNode {
 	private $children = array();
-
+	private $name;
+	
+	public function __construct($name){
+		$this->name = $name;
+    }
+    
+    protected function getName(){
+    	return $this->name;
+    }
+	
 	public function addChild($childNode){
-		$childName = $childNode->getName();
+		$childName = $childNode->toString();
 		if (array_key_exists($childName, $this->children)) {
-			throw new Exception("Can't add child with name '$childName', since thid directory already has a child with this name", 1);
+			throw new Exception("Can't add child with name '$childName', since this directory already has a child with this name", 1);
 		} else {
 			$this->children[] = $childNode;
 		}
 		return true;
 	}
+
 	public function toString(){
-    	print parent::toString();
+    	print $this->getName()."\n";
     	foreach ($this->children as $childNode) {
     		$childNode->toString();
     	}
@@ -45,18 +55,48 @@ class VirtualDirectory extends VirtualFile {
     }
 }
 
-class VirtualDirectoryCreator {
-	private $root;
-	public function __construct($args){
-		if (!(count($args) - 1)) {
-			error("Usage: ".$args[0]." PATH") || die();
+class Program {
+	public static $padding = "    ";
+	public static function readDir($directory, $padding = '') {
+		static $ownFunctionName = __FUNCTION__;
+		if ($handle = @opendir($directory)) {
+			while (($entry = readdir($handle)) !== false) {
+				if ($entry != "." && $entry != "..") {
+					echo "${padding}└── $entry\n";
+					if (is_dir($childDir = $directory.DIRECTORY_SEPARATOR.$entry)) {
+						self::$ownFunctionName($childDir, $padding.self::$padding);
+					}
+				}
+			}
+			closedir($handle);
+		} else {
+			error("Cannot read '$directory' directory. Could be a permissions or transport error. Exiting.") || die();
 		}
-		array_shift($args);
-		print_r($args);
+	}
+
+	public static function main($args){
+		if (count($args) != 2) {
+			error("Usage: ".$args[0]." PATH_TO_DIRECTORY") || die();
+		}
+		$givenPath = array_pop($args);
+		if (!is_dir($givenPath)) {
+			error("'$givenPath' isn't a directory. Exiting.") || die();
+		}
+		p($givenPath);
+		self::readDir($givenPath);
 	}
 }
 
-$root = new VirtualDirectoryCreator($argv);
+class VirtualDirectoryCreator {
+	private $root;
+	public function __construct($args){
+		
+	}
+}
+
+
+
+Program::main($argv);
 return;
 $f1 = new VirtualFile('1');
 $f2 = new VirtualFile('second');
