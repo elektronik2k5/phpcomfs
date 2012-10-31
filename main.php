@@ -3,6 +3,9 @@
 function p($message = ''){
 	print($message."\n");
 }
+function error($message){
+	file_put_contents('php://stderr', "$message\n");
+}
 
 interface iNode {
 	public function toString();
@@ -42,6 +45,19 @@ class VirtualDirectory extends VirtualFile {
     }
 }
 
+class VirtualDirectoryCreator {
+	private $root;
+	public function __construct($args){
+		if (!(count($args) - 1)) {
+			error("Usage: ".$args[0]." PATH") || die();
+		}
+		array_shift($args);
+		print_r($args);
+	}
+}
+
+$root = new VirtualDirectoryCreator($argv);
+return;
 $f1 = new VirtualFile('1');
 $f2 = new VirtualFile('second');
 $d1 = new VirtualDirectory('root');
